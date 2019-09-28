@@ -1,0 +1,113 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Canhãozinho em JS!</title>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <style>
+        body {
+            background-image: url('sea.jpg');
+            background-size: contain;
+        }
+
+        .floor {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 150px;
+            width: 100%;
+            background-image: url('floor.jpg');
+            background-size: 120px;
+        }
+
+        .cannon {
+            position: fixed;
+            left: 0;
+            bottom: 50px;
+            height: 100px;
+            transform: rotate(-90deg);
+        }
+
+        .cannon-ball {
+            width: 20px;
+        }
+
+        .controls {
+            position: fixed;
+            right: 20px;
+            bottom: 170px;
+            background-color: rgba(139, 69, 19, .8);
+            border-radius: 5px;
+        }
+
+        .btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            margin: 15px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="floor">
+        <img class="cannon" src="cannon.png">
+    </div>
+
+    <div class="controls">
+
+        <button id="btnLeft" class="btn">L</button>
+        <button id="btnFire" class="btn">F</button>
+        <button id="btnRight" class="btn">R</button>
+
+    </div>
+
+    <audio id="audio">
+        <source src="cannon.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+
+        var audio = document.getElementById("audio");
+        var cannonX = 0;
+        var limitX = window.innerWidth - 202;
+
+        $(document).ready(function () {
+
+            $("#btnLeft").click(function () {
+                cannonX -= cannonX <= 0 ? 0 : 50;
+                $('.cannon').css('left', cannonX + 'px');
+            });
+
+            $("#btnRight").click(function () {
+                cannonX += cannonX >= limitX ? 0 : 50;
+                $('.cannon').css('left', cannonX + 'px');
+            });
+
+            $("#btnFire").click(function () {
+                if (audio.paused)
+                    audio.play();
+                else
+                    audio.currentTime = 0
+
+                $('body').append('<img src="cannon-ball.png" class="cannon-ball" style="position: absolute; left: ' + (cannonX + 88) + 'px; top: 759px">');
+            });
+
+            setInterval(function () {
+                $('.cannon-ball').each(function () {
+                    var cannonBallY = $(this).offset().top;
+                    if (cannonBallY <= 0) $(this).remove();
+                    $(this).css('top', cannonBallY - 1);
+                });
+            }, 1);
+
+        });
+
+    </script>
+
+</body>
+
+</html>
