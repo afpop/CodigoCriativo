@@ -46,14 +46,28 @@
 
         .enemy-ship {
             position: fixed;
-            width: 250px;
-            border: 1px solid red;
+            width: 100px;
+        }
+
+        .ship-explosion {
+            width: 150px;
+        }
+
+        .score {
+            display: block;
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            font-size: 40px;
+            color: white;
         }
     </style>
 
 </head>
 
-<body>
+<body onload="playMusic()"">
+
+    <span class=" score">0</span>
 
     <div class="floor">
         <img class="cannon" src="cannon.png">
@@ -67,9 +81,22 @@
         <source src="cannon.mp3" type="audio/mpeg">
     </audio>
 
+    <audio id="audioShipExplosion">
+        <source src="ship-explosion.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="audioThemeSong" loop="loop">
+        <source src="theme-song.mp3" type="audio/mpeg">
+    </audio>
+
     <script>
 
         var audio = document.getElementById("audio");
+        var audioShipExplosion = document.getElementById("audioShipExplosion");
+        var audioThemeSong = document.getElementById("audioThemeSong");
+        audioThemeSong.volume = .1;
+        
+        var score = 0;
         var cannonX = 0;
 
         var maxX = window.innerWidth;
@@ -92,17 +119,23 @@
                 audio.play();
             else
                 audio.currentTime = 0
-
+                
             $('body').append('<img src="cannon-ball.png" class="cannon-ball" style="position: absolute; left: ' + (cannonX + 88) + 'px; top: 759px">');
             $('body').append('<img src="cannon-explosion.gif" class="cannon-explosion" style="position: absolute; left: ' + (cannonX + 68) + 'px; top: 739px">');
         }
 
-        function removeCannonExplosion() {
+        function removeExplosions() {
             $('.cannon-explosion').each(function () {
                 var a = this;
                 setTimeout(function () {
                     $(a).remove();
                 }, 400);
+            });
+            $('.ship-explosion').each(function () {
+                var a = this;
+                setTimeout(function () {
+                    $(a).remove();
+                }, 1000);
             });
         }
 
@@ -124,7 +157,8 @@
         function moveEnemyShip() {
             $('.enemy-ship').each(function () {
                 var shipY = $(this).offset().top;
-                if ((shipY + 250) >= limitY) $(this).remove();
+                var shipHeight = $(this).height();
+                if ((shipY + shipHeight) >= limitY) $(this).remove();
                 $(this).css('top', shipY + .1);
             });
         }
@@ -133,33 +167,42 @@
             $('.enemy-ship').each(function () {
                 var shipY = $(this).offset().top;
                 var shipX = $(this).offset().left;
-                if (cannonBallY <= (shipY + 250)) {
-                    if (cannonBallX >= shipX && cannonBallY <= (shipX + 250)) {
+                var shipWidth = $(this).width();
+                if (cannonBallY <= (shipY + shipWidth)) {
+                    if (cannonBallX >= shipX && cannonBallY <= (shipX + shipWidth)) {
+                        $('body').append('<img src="cannon-explosion.gif" class="ship-explosion" style="position: absolute; left: ' + shipX + 'px; top: ' + shipY + 'px">');
                         $(cannonBall).remove();
                         $(this).remove();
+                        if (audioShipExplosion.paused)
+                            audioShipExplosion.play();
+                        else
+                            audioShipExplosion.currentTime = 0;
+                        updateScore();
                     }
                 }
             });
         }
 
-        $(document).ready(function () {
+        function updateScore() {
+            score++;
+            $('.score').html(score);
+        }
 
+        $(document).ready(function () {
+            //audioThemeSong.play();
             $(document).keydown(function (e) {
                 if (e.which == 37) {
-                    console.log('Esquerda!');
                     moveLeft();
                 } else if (e.which == 39) {
-                    console.log('Direita!');
                     moveRight();
                 } else if (e.which == 38) {
-                    console.log('Fogo!');
                     fire();
                 }
             });
 
             setInterval(function () {
                 moveCannonBalls();
-                removeCannonExplosion();
+                removeExplosions();
                 moveEnemyShip();
             }, 1);
 
