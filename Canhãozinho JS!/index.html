@@ -7,8 +7,8 @@
         integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
     <style>
         body {
-            background-image: url('sea.jpg');
-            background-size: contain;
+            background-image: url('sea-animated.gif');
+            background-size: 100px;
         }
 
         .floor {
@@ -33,19 +33,21 @@
             width: 20px;
         }
 
+        .cannon-explosion {
+            width: 60px;
+        }
+
         .controls {
             position: fixed;
             right: 20px;
             bottom: 170px;
-            background-color: rgba(139, 69, 19, .8);
             border-radius: 5px;
         }
 
-        .btn {
-            width: 30px;
-            height: 30px;
-            border-radius: 10px;
-            margin: 15px;
+        .enemy-ship {
+            position: fixed;
+            width: 250px;
+            border: 1px solid red;
         }
     </style>
 
@@ -58,11 +60,7 @@
     </div>
 
     <div class="controls">
-
-        <button id="btnLeft" class="btn">L</button>
-        <button id="btnFire" class="btn">F</button>
-        <button id="btnRight" class="btn">R</button>
-
+        <img height="150px" src="arrow-keys.png">
     </div>
 
     <audio id="audio">
@@ -73,36 +71,99 @@
 
         var audio = document.getElementById("audio");
         var cannonX = 0;
-        var limitX = window.innerWidth - 202;
+
+        var maxX = window.innerWidth;
+
+        var limitX = maxX - 202;
+        var limitY = window.innerHeight - 150;
+
+        function moveLeft() {
+            cannonX -= cannonX <= 0 ? 0 : 10;
+            $('.cannon').css('left', cannonX + 'px');
+        }
+
+        function moveRight() {
+            cannonX += cannonX >= limitX ? 0 : 10;
+            $('.cannon').css('left', cannonX + 'px');
+        }
+
+        function fire() {
+            if (audio.paused)
+                audio.play();
+            else
+                audio.currentTime = 0
+
+            $('body').append('<img src="cannon-ball.png" class="cannon-ball" style="position: absolute; left: ' + (cannonX + 88) + 'px; top: 759px">');
+            $('body').append('<img src="cannon-explosion.gif" class="cannon-explosion" style="position: absolute; left: ' + (cannonX + 68) + 'px; top: 739px">');
+        }
+
+        function removeCannonExplosion() {
+            $('.cannon-explosion').each(function () {
+                var a = this;
+                setTimeout(function () {
+                    $(a).remove();
+                }, 400);
+            });
+        }
+
+        function moveCannonBalls() {
+            $('.cannon-ball').each(function () {
+                var cannonBallY = $(this).offset().top;
+                var cannonBallX = $(this).offset().left;
+                if (cannonBallY <= 0) $(this).remove();
+                $(this).css('top', cannonBallY - 1);
+                willColide(this, cannonBallX, cannonBallY);
+            });
+        }
+
+        function spawnShip() {
+            var _positionX = Math.random() * ((maxX - 250) - 1) + 1;
+            $('body').append('<img src="enemy-ship.png" class="enemy-ship" style="position: absolute; left: ' + _positionX + 'px; top: -250px">');
+        }
+
+        function moveEnemyShip() {
+            $('.enemy-ship').each(function () {
+                var shipY = $(this).offset().top;
+                if ((shipY + 250) >= limitY) $(this).remove();
+                $(this).css('top', shipY + .1);
+            });
+        }
+
+        function willColide(cannonBall, cannonBallX, cannonBallY) {
+            $('.enemy-ship').each(function () {
+                var shipY = $(this).offset().top;
+                var shipX = $(this).offset().left;
+                if (cannonBallY <= (shipY + 250)) {
+                    if (cannonBallX >= shipX && cannonBallY <= (shipX + 250)) {
+                        $(cannonBall).remove();
+                        $(this).remove();
+                    }
+                }
+            });
+        }
 
         $(document).ready(function () {
 
-            $("#btnLeft").click(function () {
-                cannonX -= cannonX <= 0 ? 0 : 50;
-                $('.cannon').css('left', cannonX + 'px');
-            });
-
-            $("#btnRight").click(function () {
-                cannonX += cannonX >= limitX ? 0 : 50;
-                $('.cannon').css('left', cannonX + 'px');
-            });
-
-            $("#btnFire").click(function () {
-                if (audio.paused)
-                    audio.play();
-                else
-                    audio.currentTime = 0
-
-                $('body').append('<img src="cannon-ball.png" class="cannon-ball" style="position: absolute; left: ' + (cannonX + 88) + 'px; top: 759px">');
+            $(document).keydown(function (e) {
+                if (e.which == 37) {
+                    console.log('Esquerda!');
+                    moveLeft();
+                } else if (e.which == 39) {
+                    console.log('Direita!');
+                    moveRight();
+                } else if (e.which == 38) {
+                    console.log('Fogo!');
+                    fire();
+                }
             });
 
             setInterval(function () {
-                $('.cannon-ball').each(function () {
-                    var cannonBallY = $(this).offset().top;
-                    if (cannonBallY <= 0) $(this).remove();
-                    $(this).css('top', cannonBallY - 1);
-                });
+                moveCannonBalls();
+                removeCannonExplosion();
+                moveEnemyShip();
             }, 1);
+
+            setInterval(spawnShip, 4000);
 
         });
 
