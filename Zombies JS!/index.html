@@ -1,0 +1,188 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Zombies JS!</title>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <style>
+        body {
+            background-image: url('asphalt.jpg');
+            background-size: 100px;
+        }
+
+        .bill {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 48px;
+            height: 48px;
+            background-image: url('bill.png');
+        }
+
+        .zombie {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 32px;
+            height: 32px;
+            background-image: url('zombies.png');
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bill"></div>
+
+    <script>
+
+        var billX = 0;
+        var billY = 0;
+
+        var maxX = window.innerWidth;
+        var maxY = window.innerHeight;
+
+        var limitX = maxX - 50;
+        var limitY = maxY - 50;
+
+        var spriteIndex = 0;
+        var directionIndex = 0;
+
+        var velocity = 4;
+        var zombieVelocity = 4;
+        var characterSize = 48;
+        var zombieSize = 32;
+
+        var moving = false;
+        var animationMil = 100;
+
+        var zombies = [];
+
+        function moveLeft() {
+            billX -= billX <= 0 ? 0 : velocity;
+            $('.bill').css('left', billX + 'px');
+        }
+
+        function moveRight() {
+            billX += billX >= limitX ? 0 : velocity;
+            $('.bill').css('left', billX + 'px');
+        }
+
+        function moveTop() {
+            billY -= billY <= 0 ? 0 : velocity;
+            $('.bill').css('top', billY + 'px');
+        }
+
+        function moveBottom() {
+            billY += billY >= limitY ? 0 : velocity;
+            $('.bill').css('top', billY + 'px');
+        }
+
+        function animate() {
+            $('.bill').css('background-position', (directionIndex * characterSize) + 'px ' + (spriteIndex * characterSize) + 'px');
+            spriteIndex += spriteIndex == 3 ? -3 : 1;
+        }
+
+        function spawnZombie() {
+            var position = Math.floor(Math.random() * (5 - 1)) + 1;
+            var positionX = 0;
+            var positionY = 0;
+            if (position == 1) {
+                positionX = Math.floor(Math.random() * ((maxX + zombieSize) - 1)) + 1;
+                positionY = -zombieSize;
+            } else if (position == 2) {
+                positionX = Math.floor(Math.random() * ((maxX + zombieSize) - 1)) + 1;
+                positionY = maxY + zombieSize;
+            } else if (position == 3) {
+                positionX = -zombieSize;
+                positionY = Math.floor(Math.random() * ((maxY + zombieSize) - 1)) + 1;
+            } else {
+                positionX = Math.floor(Math.random() * ((maxY + zombieSize) - 1)) + 1;
+                positionY = -zombieSize;
+            }
+            $('body').append('<div id="' + (zombies.length + 1) + '" style="top: ' + positionY + 'px; left: ' + positionX + 'px;" class="zombie"></div>');
+            zombies.push({ id: zombies.length + 1, sprite: 0, direction: 0 });
+        }
+
+        function moveZombies() {
+            var i;
+            for (var i = 0; i < zombies.length; i++) {
+                var zombie = zombies[i];
+                var zombieX = $('#' + zombie.id).offset().left;
+                var zombieY = $('#' + zombie.id).offset().top;
+                var directionX = zombieX > billX ? -1 : (zombieX == billX ? 0 : 1);
+                var directionY = zombieY > billY ? -1 : (zombieY == billY ? 0 : 1);
+                var diffX = billX > zombieX ? (billX - zombieX) : (zombieX - billX);
+                var diffY = billY > zombieY ? (billY - zombieY) : (zombieY - billY);
+                if (diffX > diffY) {
+                    zombie.direction = directionX > 0 ? 2 : 1;
+                    zombieX = zombieX + (directionX * zombieVelocity);
+                    $('#' + zombie.id).css('left', zombieX);
+                }
+                else {
+                    zombie.direction = directionY > 0 ? 0 : 3;
+                    zombieY = zombieY + (directionY * zombieVelocity);
+                    $('#' + zombie.id).css('top', zombieY);
+                }
+                var diffX = billX > zombieX ? (billX - zombieX) : (zombieX - billX);
+                var diffY = billY > zombieY ? (billY - zombieY) : (zombieY - billY);
+                if (diffX < 4 && diffY < 4)
+                    alert('Ta morto!');
+            }
+        }
+
+        function animateZombies() {
+            var i;
+            for (var i = 0; i < zombies.length; i++) {
+                var zombie = zombies[i];
+                $('#' + zombie.id).css('background-position', (384 - (zombie.sprite * zombieSize)) + 'px ' + (256 - (zombie.direction * zombieSize)) + 'px');
+                zombie.sprite += zombie.sprite == 2 ? -2 : 1;
+            }
+        }
+
+        $(document).ready(function () {
+            console.log('Zombies JS!');
+
+            $(document).keydown(function (e) {
+                if (e.which == 37) {
+                    if (directionIndex != 3) {
+                        spriteIndex = 0;
+                        directionIndex = 3;
+                    }
+                    moveLeft();
+                } else if (e.which == 39) {
+                    if (directionIndex != 1) {
+                        spriteIndex = 0;
+                        directionIndex = 1;
+                    }
+                    moveRight();
+                } else if (e.which == 38) {
+                    if (directionIndex != 2) {
+                        spriteIndex = 0;
+                        directionIndex = 2;
+                    }
+                    moveTop();
+                } else if (e.which == 40) {
+                    if (directionIndex != 0) {
+                        spriteIndex = 0;
+                        directionIndex = 0;
+                    }
+                    moveBottom();
+                }
+                if (!moving) moving = setInterval(animate, animationMil);
+            });
+
+            $(document).keyup(function (e) {
+                clearInterval(moving);
+                moving = false;
+            });
+
+            setInterval(moveZombies, 100);
+            setInterval(animateZombies, 200);
+            setInterval(spawnZombie, 1000);
+        });
+    </script>
+</body>
+
+</html>
